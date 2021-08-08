@@ -43,7 +43,7 @@ How the score should be computed for the competitive setting of the tennis envir
 
 ## Environment Set Up
 
-The project environment we're working on with is the [reacher](https://github.com/Unity-Technologies/ml-agents/blob/master/docs/Learning-Environment-Examples.md#reacher) environment. 
+The project environment we're working on with is the [tennis](https://github.com/Unity-Technologies/ml-agents/blob/master/docs/Learning-Environment-Examples.md) environment. 
 
 **Note:** The Unity ML-Agent team frequently releases updated versions of their environment. I'm are using the v0.4 interface. To avoid any confusion, please use the workspace provided here or work with v0.4 locally.
 
