@@ -1,0 +1,545 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\hypersetup{
+  pdftitle={Double-jointed Arm Reacher Project Solution},
+  pdfauthor={Leonardo Uchoa Pedreira},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+\urlstyle{same} % disable monospaced font for URLs
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx,grffile}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+
+\title{Double-jointed Arm Reacher Project Solution}
+\usepackage{etoolbox}
+\makeatletter
+\providecommand{\subtitle}[1]{% add subtitle to \maketitle
+  \apptocmd{\@title}{\par {\large #1 \par}}{}{}
+}
+\makeatother
+\subtitle{Udacity Deep Reinforcement Learning Project Number 02}
+\author{Leonardo Uchoa Pedreira}
+\date{7/28/2021}
+
+\begin{document}
+\maketitle
+
+{
+\setcounter{tocdepth}{2}
+\tableofcontents
+}
+\hypertarget{description}{%
+\section{Description}\label{description}}
+
+This document is a report describing the learning algorithm and details
+of implementation, along with ideas for future work.
+
+\pagebreak
+
+\hypertarget{base-algorithms-dqn-and-ddpg}{%
+\section{Base Algorithms: DQN and
+DDPG}\label{base-algorithms-dqn-and-ddpg}}
+
+Deep Deterministic Policy Gradients, or DDPG for short, is an
+Actor-Critic Reinforcement Learning method
+\href{https://arxiv.org/pdf/1509.02971.pdf}{created} to enable agents to
+better learn optimal policies to behave in continuous action spaces.
+DDPG borrows ideas from both \texttt{DQN} and \texttt{DPG} (DPG stands
+for Deterministic Policy Gradients).
+
+The \texttt{DQN} is a method where a neural network is used is to
+implement the \texttt{Q-Learning} algorithm, which attempts to estimate
+action-value pairs in order to maximize the expected total reward and,
+therefore, to obtain the optimal policy for the given task. It belongs
+to class of value-based methods, whose goal is to solve the
+\href{https://en.wikipedia.org/wiki/Bellman_equation}{bellman equation}.
+Solving the bellman equation gives us the optimal policy, given that our
+environment meets certain criteria in our Markov Decision Process
+setting. For \texttt{Q-Learning} in particular the equation we're trying
+to solve is as follows
+
+\[
+\displaystyle Q^{new}(s_{t},a_{t})\leftarrow \underbrace {Q(s_{t},a_{t})} _{\text{old value}}+\underbrace {\alpha } _{\text{learning rate}}\cdot \overbrace {{\bigg (}\underbrace {\underbrace {r_{t}} _{\text{reward}}+\underbrace {\gamma } _{\text{discount factor}}\cdot \underbrace {\max _{a}Q(s_{t+1},a)} _{\text{estimate of optimal future value}}} _{\text{new value (temporal difference target)}}-\underbrace {Q(s_{t},a_{t})} _{\text{old value}}{\bigg )}} ^{\text{temporal difference}} 
+\]
+
+So in a given time step \texttt{t} we search for the action that
+maximizes the action-value pair \(Q(s_{t+1},a)\) in order to estimate
+the optimal future value. DQN uses neural networks to step up from the
+traditional tabular method approach to the function approximation
+approach, which means that instead of storing the q-values in a table,
+we're going to encode it in a \textbf{parametrized} function
+approximator (parametrization what turn the q-value from \(q(s,a)\) to
+\(q(s,a;\theta)\)). This gives us a lot flexibility to solve many other
+problems, specially those whose state space is continuous.
+
+The figure bellow is the \texttt{DQN} implementation proposed in the
+\href{https://storage.googleapis.com/deepmind-media/dqn/DQNNaturePaper.pdf}{nature
+paper}. In that implementation there are two important additional
+tricks. Those tricks are employed in order to solve some instability
+that the neural network suffers in training. The first is experience
+replay and the second is the fixed q-targets.
+
+Experience replay is mainly just creating a buffer to store some events
+(the \((S_{t},A_{t},R_{t},S_{t+1})\) action-pairs) and then latter using
+mini-batches of them to run gradient descent and learn the network
+weights.
+
+Fixed q-targets is a technique used to avoid a difficulty found in
+Q-Learning, where we update a guess with a guess, which can potentially
+lead to harmful correlations. In Q-Learning after each pass our neural
+network tries to get as close as possible to the target q-values, but
+the problem is that because we update the weights after each forward
+pass, our q-value target to calculate the loss function is always
+changing and that makes learning a bit unstable. To solve this problem
+the idea is to store the weights in another neural network \(\hat{q}\)
+(called target network), freeze \(\hat{q}\) the weights and update them
+every once in a while. Now when performing the learning step, our
+q-value loss function is the deviation from the forward pass calculated
+\(q\) and the target (fixed) \(\hat{q}\) value. That means that out
+``ground-truth'' response variable is the fixed q-value from the target
+network and that makes learning more stable.
+
+\begin{figure}
+\centering
+\includegraphics{imgs/dqn_print_1.png}
+\caption{DQN paper implementation}
+\end{figure}
+
+The Deterministic Policy Gradients, or \texttt{DPG}, is an actor-critic
+method that attempts to combine both value-based and policy-based
+methods to learn an optimal policy IN continuous action spaces.
+Following the original paper,
+\href{http://proceedings.mlr.press/v32/silver14.pdf}{Deterministic
+Policy Gradient Algorithms}, on the \texttt{DPG}:
+
+\begin{quote}
+The deterministic policy gradient has a particularly appealing form: it
+is the expected gradient of the action-value function. This simple form
+means that the deterministic policy gradient can be estimated much more
+efficiently than the usual stochastic policy gradient.
+\end{quote}
+
+The \texttt{DDPG} algorithm then is a mix of both \texttt{DPG} and
+\texttt{DQN}, where we have two networks: the actor and critic. The
+actor is responsible for estimating the value (or action-value) function
+while the critic is responsible for evaluating the value function. So
+the intuition behind actor-critic methods goes like this:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  the actor takes in the current state and takes an action, based on the
+  current policy \(\pi(a|s;\theta_{\pi})\).
+\item
+  collect the experience tuple \((s,a,r,s')\) to feed the critic, whose
+  job is to estimate \(V(s;\theta_{v})\).
+\item
+  use the critic output to calculate the advantage function
+  \(A(s,a)=r + \gamma V(s';\theta_{v}) - V(s;\theta_{v})\) and use it as
+  the new baseline for actor to move on.
+\item
+  Repeat steps 1 through 3 until a stopping rule is achieved (end
+  learning).
+\end{enumerate}
+
+But the \texttt{DDPG} algorithm is a bit different from classic
+actor-critic methods. The actor in \texttt{DDPG} is used to approximate
+\(\max _{a}Q(s_{t+1},a)\), an expression found the original \texttt{DQN}
+implementation and not as a learn baseline. So instead of outputting
+\(\pi(a|s;\theta_{\pi})\), the actor outputs \(\mu(s;\theta_{\mu})\), an
+approximation of \(\max _{a}Q(s_{t+1},a)\) (notice that this is follows
+an deterministic policy, not a stochastic policy). Then the critic takes
+the actor output and learns to evaluate it, by estimating
+\(Q(s,\mu(s;\theta_{\mu});\theta_{Q})\).
+
+Besides that, \texttt{DDPG} is very much like what was described in
+steps 1-4. So in the \texttt{DDPG} algorithm implementation of steps 1
+through 4 the actor will have two neural networks (a target and a policy
+network, like in the \texttt{DQN}) and for the critic we also have two
+neural networks (a target and a policy network, also like in the
+\texttt{DQN}). Also present in the \texttt{DDPG} algorithm is the replay
+buffer, in order improve learning by collecting some chunks of episodes.
+Also present are the fixed q targets used to help stabilize learning, as
+described in the \texttt{DQN} implementation. \texttt{DDPG} pretty much
+resembles the \texttt{DQN} algorithm, but addapted to support continuous
+action spaces. The \texttt{DDPG} is depicted in Figure 02.
+
+\begin{figure}
+\centering
+\includegraphics{imgs/ddpg_print_1.png}
+\caption{DDPG paper implementation}
+\end{figure}
+
+\pagebreak
+
+\hypertarget{multi-agents-ddpg}{%
+\section{Multi-Agents DDPG}\label{multi-agents-ddpg}}
+
+Multi-agents DDPG, or MADDPG, in an extension of the DDPG algorithm
+created for the purpose of allowing multiple agents to interact in
+collaborative or competitive and even mixed settings. The key idea
+behind the MADDPG algorithm is: decentralized agents learn a centralized
+critic based on the observations and actions of all agents. As explained
+in the \href{https://paperswithcode.com/method/maddpg}{papers with code
+website}:
+
+\begin{quote}
+It leads to learned policies that only use local information (i.e.~their
+own observations) at execution time, does not assume a differentiable
+model of the environment dynamics or any particular structure on the
+communication method between agents, and is applicable not only to
+cooperative interaction but to competitive or mixed interaction
+involving both physical and communicative behavior. The critic is
+augmented with extra information about the policies of other agents,
+while the actor only has access to local information. After training is
+completed, only the local actors are used at execution phase, acting in
+a decentralized manner.
+\end{quote}
+
+Figure 3 shows an illustration fo the centralized critic, decentralized
+actor approach. Also known as centralized training and decentralized
+execution when training happens the critic for each agent has some
+augmented information about the environment, like all states and actions
+observed. But for the actor, it only has access to it's observed states
+and actions, not from other agents information. Also at execution time
+only the actor is present and because of that we use different rewards
+for each agent.
+
+\begin{figure}
+\centering
+\includegraphics{imgs/maddpg_explanation.png}
+\caption{Overview of multi-agent decentralized actor, centralized critic
+approach, as presented in the original paper}
+\end{figure}
+
+To get the MADDPG agent algorithm update from the classic DDPG, the key
+modification for the tennis environment is to create a shared replay
+buffer for both agent players. Also the score for each episode is taken
+to be the best score (max of both rewards) of the two agents, as the
+reward will be the same from all of them.
+
+\hypertarget{coding-the-algorithm}{%
+\section{Coding the Algorithm}\label{coding-the-algorithm}}
+
+The code DDPG implementation of the algorithm used here is mostly
+inspired the by
+``\href{https://github.com/udacity/deep-reinforcement-learning/tree/master/ddpg-pendulum}{Pendulum}''
+project notebook provided by \texttt{Udacity}, in the ``Actor-Critic
+Methods'' section. Here is a brief description of the files:
+
+\begin{itemize}
+\item
+  \textbf{Tennis.ipynb}: a jupyter notebook that serves as a wrapper of
+  smaller functions. This is the main file, responsible for: 1) starting
+  the environment; 2) loading the neural network architecture in
+  \texttt{model.py}; 3) loading the \texttt{maddpg\_agent.py}
+  implementation, running it and saving model weights and score results.
+\item
+  \textbf{model.py}: this is where the neural network architectures are
+  stored, written in \texttt{pytorch}.
+\item
+  \textbf{maddpg\_agent.py}: this is code that implements the
+  \texttt{MADDPG} high-level ideas of fixed q-targets, experience replay
+  and Ornstein-Uhlenbeck noise.
+\item
+  actor and critic model weights for the two competing actor-critic
+  MADDPGs:
+
+  \begin{itemize}
+  \tightlist
+  \item
+    \texttt{checkpoint\_actor\_0.pth}: first agent actor network
+  \item
+    \texttt{checkpoint\_critic\_0.pth}: first agent critic network
+  \item
+    \texttt{checkpoint\_actor\_1.pth}: second agent actor network
+  \item
+    \texttt{checkpoint\_critic\_1.pth}: second agent critic network
+  \end{itemize}
+\item
+  \textbf{maddpg\_results.sav}: this a pickled object that contains the
+  scores, average scores and time spent training.
+\end{itemize}
+
+\hypertarget{comments-on-maddpg_agent.py}{%
+\subsection{\texorpdfstring{Comments on
+\texttt{maddpg\_agent.py}}{Comments on maddpg\_agent.py}}\label{comments-on-maddpg_agent.py}}
+
+The \texttt{maddpg\_agent.py} file contains the \texttt{pytorch} model
+architecture used to solve the environment. The input size that the
+network expects is the 8 variables corresponding corresponding to the
+position and velocity of the ball and racket. Each agent receives its
+own, local observation. Two continuous actions are available,
+corresponding to movement toward (or away from) the net, and jumping.
+
+The \textbf{Actor Neural Networks} use the following architecture.
+
+\begin{verbatim}
+Input nodes (8) 
+  -> Fully Connected Layer (in: 8*2 nodes,out: 256 + Relu activation) 
+      -> Fully Connected Layer (in: 256 nodes,out: 128 Relu + activation) 
+         -> Ouput nodes (2 nodes, tanh activation)
+\end{verbatim}
+
+The \textbf{Critic Neural Networks} use the following architecture :
+
+\begin{verbatim}
+Input nodes (8) 
+  -> Fully Connected Layer (in: 8*2, out: 256 nodes + Relu) 
+      -> Fully Connected Layer (in: 256+ 8*2, out: 128 nodes + Relu) 
+         -> Ouput nodes (1 node )
+\end{verbatim}
+
+The \texttt{hyperparameters} used are:
+
+\begin{itemize}
+\tightlist
+\item
+  the number of units in both first and second fully connected layer are
+  128.
+\item
+  the learning rate parameter used in the \texttt{adam} optimizer for
+  both actor and critic are \texttt{LR\_ACTOR\ =\ LR\_CRITIC\ =\ 1e-3}
+  (this actually belongs to the \texttt{model.py} file, but it's also
+  part of the neural network architecture)
+\end{itemize}
+
+\hypertarget{comments-on-model.py}{%
+\subsection{\texorpdfstring{Comments on
+\texttt{model.py}}{Comments on model.py}}\label{comments-on-model.py}}
+
+The \texttt{model.py} file contains:
+
+\begin{itemize}
+\tightlist
+\item
+  the \texttt{hyperparameters} used:
+
+  \begin{itemize}
+  \tightlist
+  \item
+    \texttt{BUFFER\_SIZE\ =\ 1e6}: replay buffer size (how much we store
+    into the replay buffer)
+  \item
+    \texttt{BATCH\_SIZE\ =\ 128}: neural network mini-batch size
+  \item
+    \texttt{LR\_ACTOR\ =\ 1e-3}: the actor neural network learning rate
+    use in gradient descent
+  \item
+    \texttt{LR\_CRITIC\ =\ 1e-3}: the critic neural network learning
+    rate use in gradient descent
+  \item
+    \texttt{WEIGHT\_DECAY\ =\ 0.0}: L2 weight decay
+  \item
+    \texttt{LEARN\_EVERY} = 5: steps to wait until learning. Strategy
+    used in the last ddpg multi-agent environment to stabilize training
+  \item
+    \texttt{LEARN\_NUM} = 5: number of learning passes
+  \item
+    \texttt{GAMMA\ =\ 0.99}: the discount factor used in the discounted
+    sum of rewards
+  \item
+    \texttt{TAU\ =\ 1e-3}: the \(\tau\) parameter used to soft update of
+    target parameters
+  \item
+    \texttt{OU\_SIGMA} = 0.2: Ornstein-Uhlenbeck dispersion parameter
+  \item
+    \texttt{OU\_THETA} = 0.12: Ornstein-Uhlenbeck location parameter
+  \item
+    \texttt{EPS\_START} = 5.5: initial value for epsilon in noise decay
+    process in Agent.act()
+  \item
+    \texttt{EPS\_EP\_END} = 250: episode to end the noise decay process
+  \item
+    \texttt{EPS\_FINAL} = 0: final value for epsilon after decay
+  \end{itemize}
+\item
+  the \texttt{Agent} class:
+
+  \begin{itemize}
+  \tightlist
+  \item
+    implements the \texttt{step}, \texttt{act}, \texttt{learn} and
+    \texttt{soft\_updates} methods. Also has the \texttt{start\_learn}
+    to implement the idea to learn just after some episodes in order to
+    help stabilize training (as suggested in the benchmark section)
+  \item
+    initializes the policy and target networks for fixed q-target
+    strategy for both actor and critic networks.
+  \item
+    initializes the \texttt{ReplayBuffer} class.
+  \end{itemize}
+\item
+  the \texttt{OUNoise} class:
+
+  \begin{itemize}
+  \tightlist
+  \item
+    implements the Ornstein-Uhlenbeck process in order to help
+    exploration
+  \item
+    hyperparameters used are the default already present in the udacity
+    pendulum implementation. Namely:
+
+    \begin{itemize}
+    \tightlist
+    \item
+      \texttt{mu\ =\ 0}
+    \item
+      \texttt{theta\ =\ 0.12}
+    \item
+      \texttt{sigma\ =\ 0.2}
+    \end{itemize}
+  \item
+    changed only to adapt the code the multiple agents environment
+  \end{itemize}
+\item
+  the \texttt{ReplayBuffer} class: an API to
+
+  \begin{itemize}
+  \tightlist
+  \item
+    initialize storage
+  \item
+    implement the \texttt{add} (add new experiences) and \texttt{sample}
+    (sample experiences to mini-batch GD learning) methods
+  \end{itemize}
+\end{itemize}
+
+\pagebreak
+
+\hypertarget{results}{%
+\section{Results}\label{results}}
+
+The \texttt{MADDPG} implementation was able to successfully solve the
+task of achieving an average score of +0.520 over 100 episodes in 731
+episodes, as shown in the \texttt{Figure\ 04} bellow. It's important to
+note that we used a early stopping technique not to go into the 2000
+episodes, if not needed. The plot of the scores is shown in
+\texttt{Figure\ 05}.
+
+\begin{figure}
+\centering
+\includegraphics{imgs/results_1.png}
+\caption{Learning evolution}
+\end{figure}
+
+\begin{figure}
+\centering
+\includegraphics{imgs/results_2.png}
+\caption{Learning evolution plot}
+\end{figure}
+
+An important note about training is that I've experienced a
+\textbf{huge} instability. Sometimes the agent was able to solve the
+environment in even less than 731 episodes, but sometimes it didn't
+score anything. Probably it was due to some low good experience samples
+or even implementation problems. Some of the other tryouts are shown in
+the \texttt{Other\ Tryouts} section
+
+\pagebreak
+
+\hypertarget{ideas-to-explore-later}{%
+\section{Ideas to Explore Later}\label{ideas-to-explore-later}}
+
+Some ideas that could lead to improvements in the learning process are
+trying to:
+
+\begin{itemize}
+\item
+  revise the algorithm a lot more an try to make it more stable.
+\item
+  maybe explore more the batch normalization technique. For the cases
+  that I've tried it I couldn't get out the slump and make the agent
+  learn or learn more consistently just by using it.
+\item
+  an interesting approach to MADRL is to use adaptive policies, as
+  presented in the paper
+  \href{https://arxiv.org/pdf/1912.00949v1.pdf}{Multi-Agent Deep
+  Reinforcement Learning with Adaptive Policies}.
+\item
+  another thing to try out is the Minimax MADDPG, as presented in the
+  paper
+  \href{http://aima.eecs.berkeley.edu/~russell/papers/aaai19-marl.pdf}{Robust
+  Multi-Agent Reinforcement Learning via Minimax Deep Deterministic
+  Policy Gradient}. They try using the minimax optimization approach in
+  order to make learning more robust to opponents with different
+  strategies.
+\end{itemize}
+
+\pagebreak
+
+\hypertarget{other-tryouts}{%
+\section{Other Tryouts}\label{other-tryouts}}
+
+\begin{figure}
+\centering
+\includegraphics{imgs/results_3.png}
+\caption{Learning evolution tryout}
+\end{figure}
+
+\pagebreak
+
+\begin{figure}
+\centering
+\includegraphics{imgs/results_4.png}
+\caption{Learning evolution tryout}
+\end{figure}
+
+\pagebreak
+
+\includegraphics{imgs/results_5.png}
+\includegraphics{imgs/results_6.png}
+\includegraphics{imgs/results_7.png}
+
+\end{document}
