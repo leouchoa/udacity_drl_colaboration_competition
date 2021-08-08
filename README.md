@@ -7,10 +7,10 @@ This repository contains the codes for the project Collaboration and Competition
     - `checkpoint_critic_0.pth`: first agent critic network
     - `checkpoint_actor_1.pth`: second agent actor network
     - `checkpoint_critic_1.pth`: second agent critic network
-- added maddpg model (`maddpg_agent.py`) 
+- maddpg model (`maddpg_agent.py`) 
 - actor network and critic networks architectures (`model.py`)
-- added tracked training results (time spend training, scores evolution)  **(`maddpg_results.sav`)**
-- added the jupyter notebook used to train the agent (`Tennis.ipynb`)
+- tracked training results (time spend training, scores evolution)  **(`maddpg_results.sav`)**
+- jupyter notebook used to train the agent (`Tennis.ipynb`)
 
 ## About the Project
 
