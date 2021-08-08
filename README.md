@@ -68,3 +68,11 @@ For this project, you will not need to install Unity - this is because the envir
 
 
 Also if you are interested in learning to build your own Unity environments after completing the project, you are encouraged to follow the instructions [here](https://github.com/Unity-Technologies/ml-agents/blob/master/docs/Getting-Started-with-Balance-Ball.md), which walk you through all of the details of building an environment from a Unity scene. 
+
+## Instructions to Run the Code
+
+After your environment is set up, to run the code and train the agent:
+
+- Open up the `Tennis.ipynb` jupyter notebook.
+- Run all the cells (note that the gpu usage is enabled if you have a gpu already configured)
+
