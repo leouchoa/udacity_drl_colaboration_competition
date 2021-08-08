@@ -76,3 +76,4 @@ After your environment is set up, to run the code and train the agent:
 - Open up the `Tennis.ipynb` jupyter notebook.
 - Run all the cells (note that the gpu usage is enabled if you have a gpu already configured)
 
+**!!!Attention!!!**: training is **highly** unstable, as shown in the project report. So don't worry if you try to replicate the results and the agent doesn't learn for while or doesn't learn at all.
