@@ -9,17 +9,17 @@ import torch
 import torch.nn.functional as F
 import torch.optim as optim
 
-BUFFER_SIZE = int(1e6)  # replay buffer size
+BUFFER_SIZE = int(1e6)  # replay buffer size (how much we store into the replay buffer)
 BATCH_SIZE = 128        # minibatch size
-LR_ACTOR = 1e-3         # learning rate of the actor
-LR_CRITIC = 1e-3        # learning rate of the critic
+LR_ACTOR = 1e-3         # the actor neural network learning rate used in gradient descent
+LR_CRITIC = 1e-3        # the critic neural network learning rate used in gradient descent
 WEIGHT_DECAY = 0        # L2 weight decay
-LEARN_EVERY = 5         # learning timestep interval
+LEARN_EVERY = 5         # steps to wait until learning. Strategy used in the last ddpg multi-agent environment to stabilize training
 LEARN_NUM = 5           # number of learning passes
 GAMMA = 0.99            # discount factor
 TAU = 7e-2              # for soft update of target parameters
-OU_SIGMA = 0.2          # Ornstein-Uhlenbeck noise parameter, volatility
-OU_THETA = 0.12         # Ornstein-Uhlenbeck noise parameter, speed of mean reversion
+OU_SIGMA = 0.2          # Ornstein-Uhlenbeck dispersion parameter
+OU_THETA = 0.12         # Ornstein-Uhlenbeck location parameter
 EPS_START = 5.5         # initial value for epsilon in noise decay process in Agent.act()
 EPS_EP_END = 250        # episode to end the noise decay process
 EPS_FINAL = 0           # final value for epsilon after decay
