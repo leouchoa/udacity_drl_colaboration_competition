@@ -1,8 +1,8 @@
 ---
-title: "Double-jointed Arm Reacher Project Solution"
-subtitle: "Udacity Deep Reinforcement Learning Project Number 02"
+title: "Competitive Multi-Agent Tennis Environment Project Solution"
+subtitle: "Udacity Deep Reinforcement Learning Project Number 03"
 author: "Leonardo Uchoa Pedreira"
-date: "7/28/2021"
+date: "8/8/2021"
 output: 
   pdf_document: 
     toc: yes
